@@ -1,0 +1,19 @@
+• Data OSM baru per 15 April 2022
+• Ditambahkan artikel Wikipedia untuk banyak objek (eksperimental)
+• Arah rute mobil yang ditingkatkan
+• Beberapa pengoptimalan kecepatan dan baterai
+• Banyak perbaikan perutean
+• Perbaiki rute kereta bawah tanah di beberapa kota
+• Tambahkan terjemahan Euskara (Basque)
+• Terjemahan bahasa Italia dan DE yang ditingkatkan
+• Gambar panah satu arah lebih sering
+• Hapus balai kota dan taman dari tamasya
+• Gunakan telepon dari tag OSM "seluler"
+• Tambahkan lebih banyak jenis vending_machine
+• Tambahkan penggunaan landuse=education
+• Isi oranye untuk sekolah, taman kanak-kanak dan penggunaan landuse=education
+• Memperbaiki pencarian kategori Daur Ulang
+• Tampilan akses Internet tetap
+• Memperbaiki serialisasi deskripsi di edits.xml
+• Memperbaiki perenderan font
+• Ikuti berita kami di dialog "?"
