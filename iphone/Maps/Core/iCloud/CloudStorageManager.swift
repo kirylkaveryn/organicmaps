@@ -251,10 +251,10 @@ private extension CloudStorageManger {
     var coordinationError: NSError?
     let targetLocalFileUrl = cloudMetadataItem.relatedLocalItemUrl(to: localDirectoryUrl)
     LOG(.debug, "File \(cloudMetadataItem.fileName) is downloaded to the local iCloud container. Start coordinating and writing file...")
-    fileCoordinator.coordinate(readingItemAt: cloudMetadataItem.fileUrl, options: .withoutChanges, error: &coordinationError) { url in
+    fileCoordinator.coordinate(readingItemAt: cloudMetadataItem.fileUrl, writingItemAt: targetLocalFileUrl, error: &coordinationError) { readingUrl, writingUrl in
       do {
-        let cloudFileData = try Data(contentsOf: url)
-        try cloudFileData.write(to: targetLocalFileUrl, options: .atomic, lastModificationDate: cloudMetadataItem.lastModificationDate)
+        let cloudFileData = try Data(contentsOf: readingUrl)
+        try cloudFileData.write(to: writingUrl, options: .atomic, lastModificationDate: cloudMetadataItem.lastModificationDate)
         needsToReloadBookmarksOnTheMap = true
         LOG(.debug, "File \(cloudMetadataItem.fileName) is copied to local directory successfully.")
         completion(.success)
@@ -298,10 +298,10 @@ private extension CloudStorageManger {
         var coordinationError: NSError?
 
         LOG(.debug, "Start coordinating and writing file \(localMetadataItem.fileName)...")
-        fileCoordinator.coordinate(writingItemAt: targetCloudFileUrl, options: [], error: &coordinationError) { url in
+        fileCoordinator.coordinate(readingItemAt: localMetadataItem.fileUrl, writingItemAt: targetCloudFileUrl, error: &coordinationError) { readingUrl, writingUrl in
           do {
             let fileData = try localMetadataItem.fileData()
-            try fileData.write(to: url, lastModificationDate: localMetadataItem.lastModificationDate)
+            try fileData.write(to: writingUrl, lastModificationDate: localMetadataItem.lastModificationDate)
             completion(.success)
           } catch {
             completion(.failure(error))
