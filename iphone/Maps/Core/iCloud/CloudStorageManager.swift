@@ -344,8 +344,8 @@ private extension CloudStorageManger {
       let trashDirectoryUrl = cloudDirectoryUrl.appendingPathComponent(kTrashDirectoryName, isDirectory: true)
       let fileInTrashDirectoryUrl = trashDirectoryUrl.appendingPathComponent(fileName)
       let trashDirectoryContent = try FileManager.default.contentsOfDirectory(at: trashDirectoryUrl,
-                                                                          includingPropertiesForKeys: [],
-                                                                          options: [.skipsPackageDescendants, .skipsSubdirectoryDescendants])
+                                                                              includingPropertiesForKeys: [],
+                                                                              options: [.skipsPackageDescendants, .skipsSubdirectoryDescendants])
       if trashDirectoryContent.contains(fileInTrashDirectoryUrl) {
         try FileManager.default.removeItem(at: fileInTrashDirectoryUrl)
       }
@@ -357,7 +357,7 @@ private extension CloudStorageManger {
     LOG(.debug, "Start resolving version conflict for file \(cloudMetadataItem.fileName)...")
 
     guard let versionsInConflict = NSFileVersion.unresolvedConflictVersionsOfItem(at: cloudMetadataItem.fileUrl),
-    let currentVersion = NSFileVersion.currentVersionOfItem(at: cloudMetadataItem.fileUrl) else {
+          let currentVersion = NSFileVersion.currentVersionOfItem(at: cloudMetadataItem.fileUrl) else {
       completion(.success)
       return
     }
@@ -388,12 +388,12 @@ private extension CloudStorageManger {
       }
       do {
         // TODO: Check if current can be newer than latest
-//        if currentVersion.modificationDate! < latestVersionInConflict.modificationDate! {
-          try FileManager.default.copyItem(at: readingURL, to: writingURL)
-          try latestVersionInConflict.replaceItem(at: readingURL)
-//        } else {
-//          
-//        }
+        //        if currentVersion.modificationDate! < latestVersionInConflict.modificationDate! {
+        try FileManager.default.copyItem(at: readingURL, to: writingURL)
+        try latestVersionInConflict.replaceItem(at: readingURL)
+        //        } else {
+        //
+        //        }
         try NSFileVersion.removeOtherVersionsOfItem(at: readingURL)
         needsToReloadBookmarksOnTheMap = true
         completion(.success)
