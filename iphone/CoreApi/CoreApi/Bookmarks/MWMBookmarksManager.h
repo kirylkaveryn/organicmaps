@@ -86,6 +86,7 @@ NS_SWIFT_NAME(BookmarksManager)
 
 - (void)shareCategory:(MWMMarkGroupID)groupId;
 - (void)shareAllCategories;
+- (void)shareAllCategoriesWithCompletion:(void (^)(MWMBookmarksShareStatus, NSURL *))completion;
 - (NSURL *)shareCategoryURL;
 - (void)finishShareCategory;
 

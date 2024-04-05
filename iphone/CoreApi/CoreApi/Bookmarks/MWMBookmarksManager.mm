@@ -607,6 +607,37 @@ static BookmarkManager::SortingType convertSortingTypeToCore(MWMBookmarksSorting
   }];
 }
 
+- (void)shareAllCategoriesWithCompletion:(void (^)(MWMBookmarksShareStatus, NSURL *))completion {
+  self.bm.PrepareAllFilesForSharing([self, completion](BookmarkManager::SharingResult sharingResult) {
+    MWMBookmarksShareStatus status = [self convertSharingResultToStatus:sharingResult];
+    NSURL *url = nil;
+    if (status == MWMBookmarksShareStatusSuccess) {
+      url = [NSURL fileURLWithPath:@(sharingResult.m_sharingPath.c_str()) isDirectory:NO];
+      ASSERT(url, ("Invalid share category URL"));
+    }
+
+    if (completion) {
+      dispatch_async(dispatch_get_main_queue(), ^{
+        completion(status, url);
+      });
+    }
+  });
+}
+
+- (MWMBookmarksShareStatus)convertSharingResultToStatus:(BookmarkManager::SharingResult)sharingResult {
+  switch (sharingResult.m_code) {
+    case BookmarkManager::SharingResult::Code::Success:
+      return MWMBookmarksShareStatusSuccess;
+    case BookmarkManager::SharingResult::Code::EmptyCategory:
+      return MWMBookmarksShareStatusEmptyCategory;
+    case BookmarkManager::SharingResult::Code::ArchiveError:
+      return MWMBookmarksShareStatusArchiveError;
+    case BookmarkManager::SharingResult::Code::FileError:
+      return MWMBookmarksShareStatusFileError;
+  }
+}
+
+
 - (NSURL *)shareCategoryURL {
   NSAssert(_shareCategoryURL != nil, @"Invalid share category url");
   return _shareCategoryURL;
