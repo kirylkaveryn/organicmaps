@@ -60,6 +60,12 @@ final class DefaultLocalDirectoryMonitor: LocalDirectoryMonitor {
   func start(completion: VoidResultCompletionHandler? = nil) {
     guard case .stopped = state else { return }
 
+    if let source {
+      resume()
+      state = .started(dirSource: source)
+      return
+    }
+
     let nowTimer = Timer.scheduledTimer(withTimeInterval: .zero, repeats: false) { [weak self] _ in
       self?.debounceTimerDidFire()
     }
@@ -70,8 +76,7 @@ final class DefaultLocalDirectoryMonitor: LocalDirectoryMonitor {
       }
       source = directorySource
       state = .debounce(dirSource: directorySource, timer: nowTimer)
-      isPaused = false
-      directorySource.resume()
+      resume()
       completion?(.success)
     } catch {
       stop()
@@ -83,7 +88,6 @@ final class DefaultLocalDirectoryMonitor: LocalDirectoryMonitor {
     pause()
     state = .stopped
     contents.removeAll()
-    source?.cancel()
   }
 
   func pause() {
