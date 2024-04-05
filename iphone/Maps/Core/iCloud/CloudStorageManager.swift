@@ -35,6 +35,7 @@ let kUDDidFinishInitialCloudSynchronization = "kUDDidFinishInitialCloudSynchroni
   }
 
   @objc func start() {
+    subscribeToSettingsNotifications()
     subscribeToApplicationLifecycleNotifications()
     cloudDirectoryMonitor.delegate = self
     localDirectoryMonitor.delegate = self
@@ -47,6 +48,15 @@ private extension CloudStorageManger {
   func subscribeToApplicationLifecycleNotifications() {
     NotificationCenter.default.addObserver(self, selector: #selector(appWillEnterForeground), name: UIApplication.didBecomeActiveNotification, object: nil)
     NotificationCenter.default.addObserver(self, selector: #selector(appDidEnterBackground), name: UIApplication.didEnterBackgroundNotification, object: nil)
+  }
+
+  func unsubscribeFromApplicationLifecycleNotifications() {
+    NotificationCenter.default.removeObserver(self, name: UIApplication.didBecomeActiveNotification, object: nil)
+    NotificationCenter.default.removeObserver(self, name: UIApplication.didEnterBackgroundNotification, object: nil)
+  }
+
+  func subscribeToSettingsNotifications() {
+    NotificationCenter.default.addObserver(self, selector: #selector(didChangeEnabledState), name: NSNotification.iCloudSynchronizationDidChangeEnabledState, object: nil)
   }
 
   @objc func appWillEnterForeground() {
@@ -62,8 +72,13 @@ private extension CloudStorageManger {
     }
   }
 
+  @objc func didChangeEnabledState() {
+    Settings.iCLoudSynchronizationEnabled() ? startSynchronization() : stopSynchronization()
+  }
+
   // MARK: - Synchronization Lifecycle
   private func startSynchronization() {
+    guard Settings.iCLoudSynchronizationEnabled() else { return }
     guard !cloudDirectoryMonitor.isStarted else {
       if cloudDirectoryMonitor.isPaused {
         resumeSynchronization()
@@ -91,6 +106,7 @@ private extension CloudStorageManger {
   }
 
   func stopSynchronization() {
+    LOG(.debug, "Stop synchronization")
     localDirectoryMonitor.stop()
     cloudDirectoryMonitor.stop()
     synchronizationStateManager.resetState()
@@ -500,4 +516,13 @@ fileprivate extension Data {
       try url.setResourceModificationDate(Date(timeIntervalSince1970: lastModificationDate))
     }
   }
+}
+
+// MARK: - Notification + iCloudSynchronizationDidChangeEnabledState
+extension Notification.Name {
+  static let iCloudSynchronizationDidChangeEnabledStateNotification = Notification.Name("iCloudSynchronizationDidChangeEnabledStateNotification")
+}
+
+@objc extension NSNotification {
+  public static let iCloudSynchronizationDidChangeEnabledState = Notification.Name.iCloudSynchronizationDidChangeEnabledStateNotification
 }
