@@ -25,12 +25,12 @@ final class iCloudDirectoryMonitor: NSObject, UbiquitousDirectoryMonitor {
 
   static let `default` = iCloudDirectoryMonitor(cloudContainerIdentifier: iCloudDirectoryMonitor.sharedContainerIdentifier)
 
-  private let metadataQuery = NSMetadataQuery()
+  private var metadataQuery: NSMetadataQuery?
   private var containerIdentifier: String
   private var ubiquitousDocumentsDirectory: URL?
 
   // MARK: - Public properties
-  var isStarted: Bool { return metadataQuery.isStarted }
+  var isStarted: Bool { return metadataQuery?.isStarted ?? false }
   private(set) var isPaused: Bool = true
   weak var delegate: UbiquitousDirectoryMonitorDelegate?
 
@@ -38,9 +38,9 @@ final class iCloudDirectoryMonitor: NSObject, UbiquitousDirectoryMonitor {
     self.containerIdentifier = cloudContainerIdentifier
     super.init()
 
-    setupMetadataQuery()
-    subscribeToCloudAvailabilityNotifications()
     fetchUbiquityDirectoryUrl()
+    subscribeOnMetadataQueryNotifications()
+    subscribeToCloudAvailabilityNotifications()
   }
 
 
@@ -67,12 +67,12 @@ final class iCloudDirectoryMonitor: NSObject, UbiquitousDirectoryMonitor {
   }
 
   func resume() {
-    metadataQuery.enableUpdates()
+    metadataQuery?.enableUpdates()
     isPaused = false
   }
 
   func pause() {
-    metadataQuery.disableUpdates()
+    metadataQuery?.disableUpdates()
     isPaused = true
   }
 
@@ -125,29 +125,35 @@ private extension iCloudDirectoryMonitor {
   }
 
   // MARK: - MetadataQuery
-  private func setupMetadataQuery() {
-    metadataQuery.notificationBatchingInterval = 1
-    metadataQuery.searchScopes = [NSMetadataQueryUbiquitousDocumentsScope]
-    metadataQuery.predicate = NSPredicate(format: "%K LIKE %@", NSMetadataItemFSNameKey, "*.\(kFileExtensionKML)")
-    metadataQuery.sortDescriptors = [NSSortDescriptor(key: NSMetadataItemFSNameKey, ascending: true)]
-
+  func subscribeOnMetadataQueryNotifications() {
     NotificationCenter.default.addObserver(self, selector: #selector(queryDidFinishGathering(_:)), name: NSNotification.Name.NSMetadataQueryDidFinishGathering, object: nil)
     NotificationCenter.default.addObserver(self, selector: #selector(queryDidUpdate(_:)), name: NSNotification.Name.NSMetadataQueryDidUpdate, object: nil)
   }
 
+  func setupMetadataQuery() {
+    let metadataQuery = NSMetadataQuery()
+    metadataQuery.notificationBatchingInterval = 1
+    metadataQuery.searchScopes = [NSMetadataQueryUbiquitousDocumentsScope]
+    metadataQuery.predicate = NSPredicate(format: "%K LIKE %@", NSMetadataItemFSNameKey, "*.\(kFileExtensionKML)")
+    metadataQuery.sortDescriptors = [NSSortDescriptor(key: NSMetadataItemFSNameKey, ascending: true)]
+    self.metadataQuery = metadataQuery
+  }
+
   func startQuery() {
-    guard !metadataQuery.isStarted else { return }
+    setupMetadataQuery()
+    guard let metadataQuery, !metadataQuery.isStarted else { return }
     metadataQuery.start()
     isPaused = false
   }
 
   func stopQuery() {
-    metadataQuery.stop()
+    metadataQuery?.stop()
+    metadataQuery = nil
     isPaused = true
   }
 
   @objc func queryDidFinishGathering(_ notification: Notification) {
-    guard cloudIsAvailable(), notification.object as? NSMetadataQuery === metadataQuery, let metadataItems = metadataQuery.results as? [NSMetadataItem] else { return }
+    guard cloudIsAvailable(), let metadataQuery, notification.object as? NSMetadataQuery === metadataQuery, let metadataItems = metadataQuery.results as? [NSMetadataItem] else { return }
     pause()
     let newContent = getContents(metadataItems)
     delegate?.didFinishGathering(contents: newContent)
@@ -155,7 +161,7 @@ private extension iCloudDirectoryMonitor {
   }
 
   @objc func queryDidUpdate(_ notification: Notification) {
-    guard cloudIsAvailable(), notification.object as? NSMetadataQuery === metadataQuery, let metadataItems = metadataQuery.results as? [NSMetadataItem] else { return }
+    guard cloudIsAvailable(), let metadataQuery, notification.object as? NSMetadataQuery === metadataQuery, let metadataItems = metadataQuery.results as? [NSMetadataItem] else { return }
     pause()
     let newContent = getContents(metadataItems, userInfo: notification.userInfo)
     delegate?.didUpdate(contents: newContent)
