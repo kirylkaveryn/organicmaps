@@ -79,3 +79,7 @@ jobs:
             'generic/platform=iOS' \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
+
+      - name: Run Tests
+        run: xcodebuild test -scheme OMapsTests -destination 'platform=iOS Simulator,name=iPhone 13,OS=latest'
+        working-directory: xcode
