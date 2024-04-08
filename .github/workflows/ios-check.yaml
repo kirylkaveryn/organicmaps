@@ -79,7 +79,16 @@ jobs:
             'generic/platform=iOS' \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
+        working-directory: xcode
+
+      - name: List files
+        run: ls -R
 
       - name: Run Tests
-        run: xcodebuild test -scheme OMapsTests -destination 'platform=iOS Simulator,name=iPhone 13,OS=latest'
-        working-directory: xcode
+        shell: bash
+        run: |
+          xcodebuild \
+            -workspace xcode/omim.xcworkspace \
+            -scheme OMaps \
+            -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
+            test
