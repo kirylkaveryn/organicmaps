@@ -81,5 +81,10 @@ jobs:
             CODE_SIGNING_ALLOWED=NO
 
       - name: Run Tests
-        run: xcodebuild test -scheme OMapsTests -destination 'platform=iOS Simulator,name=iPhone 13,OS=latest'
+        run: |
+          xcodebuild \
+            -workspace xcode/omim.xcworkspace \
+            -scheme OMaps \
+            -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
+            test
         working-directory: xcode
