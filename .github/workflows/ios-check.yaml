@@ -68,23 +68,14 @@ jobs:
           key: xcode-cache-deriveddata-${{ github.workflow }}-${{ matrix.buildType }}-${{ github.sha }}
           restore-keys: xcode-cache-deriveddata-${{ github.workflow }}-${{ matrix.buildType }}
 
-      - name: Compile
+      - name: Compile and Run Tests
         shell: bash
         # Check for compilation errors.
         run: |
           xcodebuild \
             -workspace xcode/omim.xcworkspace \
             -scheme OMaps \
-            -configuration ${{ matrix.buildType }} build \
+            -configuration ${{ matrix.buildType }} build test \
             'generic/platform=iOS' \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
-
-      - name: Run Tests
-        shell: bash
-        run: |
-          xcodebuild \
-            -workspace xcode/omim.xcworkspace \
-            -scheme OMaps \
-            -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
-            test
