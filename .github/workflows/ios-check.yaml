@@ -79,10 +79,6 @@ jobs:
             'generic/platform=iOS' \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
-        working-directory: xcode
-
-      - name: List files
-        run: ls -R
 
       - name: Run Tests
         shell: bash
