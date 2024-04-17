@@ -37,9 +37,4 @@ final class CarPlayServiceTests: XCTestCase {
     XCTAssertEqual(estimates.distanceRemaining, Measurement<UnitLength>(value: 25.2, unit: .kilometers))
     XCTAssertEqual(estimates.timeRemaining, 100)
   }
-
-  func testFail() {
-     XCTFail("Failing test!")
-  }
-  
 }
