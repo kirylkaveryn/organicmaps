@@ -85,9 +85,8 @@ jobs:
             CODE_SIGNING_ALLOWED=NO
 
       - name: Upload Test Results On Failure (Debug)
-        if: matrix.buildType == 'Debug'
+        if: ${{ matrix.buildType == 'Debug' && failure() }}
         uses: actions/upload-artifact@v4
-        if: ${{ failure() }}
         with:
           name: $(TEST_RESULTS_BUNDLE_NAME)-${{ github.run_number }}.xcresult
           path: $(TEST_RESULTS_BUNDLE_NAME).xcresult
