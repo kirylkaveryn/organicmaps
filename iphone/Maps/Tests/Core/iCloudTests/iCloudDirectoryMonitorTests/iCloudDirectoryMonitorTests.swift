@@ -42,11 +42,14 @@ class iCloudDirectoryMonitorTests: XCTestCase {
     mockFileManager.stubUbiquityIdentityToken = NSString(string: "mockToken")
     let startExpectation = expectation(description: "startExpectation")
     cloudMonitor.start { result in
-      if case .success = result {
+      switch result {
+      case .failure(let error):
+        XCTFail("Failed to start monitor: \(error)")
+      case .success:
         startExpectation.fulfill()
       }
     }
-    waitForExpectations(timeout: 5)
+    wait(for: [startExpectation], timeout: 5)
     XCTAssertTrue(cloudMonitor.state == .started, "Monitor should be started when the cloud is available.")
   }
 
@@ -58,7 +61,7 @@ class iCloudDirectoryMonitorTests: XCTestCase {
         startExpectation.fulfill()
       }
     }
-    waitForExpectations(timeout: 5)
+    wait(for: [startExpectation], timeout: 5)
     XCTAssertTrue(cloudMonitor.state == .stopped, "Monitor should not start when the cloud is not available.")
   }
 
@@ -119,7 +122,9 @@ class iCloudDirectoryMonitorTests: XCTestCase {
 
     let didFinishGatheringExpectation = expectation(description: "didFinishGathering")
     mockDelegate.didFinishGatheringExpectation = didFinishGatheringExpectation
+    
     NotificationCenter.default.post(name: .NSMetadataQueryDidFinishGathering, object: metadataQuery)
+
     wait(for: [didFinishGatheringExpectation], timeout: 5.0)
     XCTAssertTrue(mockDelegate.didFinishGatheringCalled, "Delegate's didFinishGathering should be called.")
   }
@@ -133,7 +138,9 @@ class iCloudDirectoryMonitorTests: XCTestCase {
     }
     let didUpdateExpectation = expectation(description: "didUpdate")
     mockDelegate.didUpdateExpectation = didUpdateExpectation
+    
     NotificationCenter.default.post(name: NSNotification.Name.NSMetadataQueryDidUpdate, object: metadataQuery)
+    
     wait(for: [didUpdateExpectation], timeout: 5.0)
     XCTAssertTrue(mockDelegate.didUpdateCalled, "Delegate's didUpdate should be called.")
   }
