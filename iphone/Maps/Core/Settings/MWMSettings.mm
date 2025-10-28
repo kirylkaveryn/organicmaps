@@ -186,13 +186,20 @@ NSString * const kUDFileLoggingEnabledKey = @"FileLoggingEnabledKey";
 + (NSString *)donateUrl
 {
   std::string url;
-  return settings::Get(settings::kDonateUrl, url) ? @(url.c_str()) : nil;
+  /// @todo(KK): pass crowdfunding url from the core
+  if (!settings::Get(settings::kDonateUrl, url))
+    return nil;
+  if (url == "https://organicmaps.app/donate/")
+    return [L(@"translated_om_site_url") stringByAppendingString:@"donate/"];
+  else
+    return @(url.c_str());
 }
 
 + (BOOL)isNY
 {
   bool isNY;
-  return settings::Get("NY", isNY) ? isNY : false;
+//  return settings::Get(settings::kNY, isNY) ? isNY : false;
+  return true;
 }
 
 + (BOOL)iCLoudSynchronizationEnabled
@@ -222,6 +229,32 @@ NSString * const kUDFileLoggingEnabledKey = @"FileLoggingEnabledKey";
 {
   [NSUserDefaults.standardUserDefaults setBool:fileLoggingEnabled forKey:kUDFileLoggingEnabledKey];
   [Logger setFileLoggingEnabled:fileLoggingEnabled];
+}
+
++ (BOOL)isCrowdfundingEnabled
+{
+  return GetFramework().IsCrowdfundingEnabled();
+}
+
++ (BOOL)canShowCrowdfundingPromo
+{
+  LOG(LDEBUG, ("CanShowCrowdfundingPromo: ", GetFramework().CanShowCrowdfundingPromo() ? "true" : " false"));
+  return GetFramework().CanShowCrowdfundingPromo();
+}
+
++ (void)didShowCrowdfundingPromo
+{
+  GetFramework().DidShowCrowdfundingPromo();
+}
+
++ (void)didPossiblyReturnFromCrowdfundingPage
+{
+  GetFramework().DidPossiblyReturnFromCrowdfundingPage();
+}
+
++ (void)resetCrowdfunding
+{
+  GetFramework().ResetCrowdfunding();
 }
 
 @end

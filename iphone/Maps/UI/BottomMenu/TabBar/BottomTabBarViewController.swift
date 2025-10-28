@@ -17,32 +17,33 @@ class BottomTabBarViewController: UIViewController {
       updateFrame(animated: true)
     }
   }
+
   @objc var isApplicationBadgeHidden: Bool = true {
     didSet {
       updateBadge()
     }
   }
-  var tabBarView: BottomTabBarView {
-    return view as! BottomTabBarView
-  }
-  @objc static var controller: BottomTabBarViewController? {
-    return MWMMapViewControlsManager.manager()?.tabBarController
-  }
-  
-  override func viewDidLoad() {
-    super.viewDidLoad()
-    presenter.configure()
-  }
-  
+
+  var tabBarView: BottomTabBarView { view as! BottomTabBarView }
+
+  @objc static var controller: BottomTabBarViewController? { MWMMapViewControlsManager.manager()?.tabBarController }
+
   override func viewWillAppear(_ animated: Bool) {
     super.viewWillAppear(animated)
+    presenter.viewWillAppear()
+  }
+
+  func updateAboutButtonIcon(isCrowdfunding: Bool) {
+    if isCrowdfunding {
+      helpButton.setImage(UIImage(resource: .icCrowdfunding), for: .normal)
+      return
+    }
     if Settings.isNY() {
-      helpButton.setTitle("🎄", for: .normal)
-      helpButton.setImage(nil, for: .normal)
+      helpButton.setImage(UIImage(resource: .icChristmasTree), for: .normal)
     }
     updateBadge()
   }
-  
+
   static func updateAvailableArea(_ frame: CGRect) {
     BottomTabBarViewController.controller?.updateAvailableArea(frame)
   }
@@ -67,7 +68,7 @@ class BottomTabBarViewController: UIViewController {
   @IBAction func onMenuButtonPressed(_ sender: Any) {
     presenter.onMenuButtonPressed()
   }
-  
+
   private func updateAvailableArea(_ frame:CGRect) {
     avaliableArea = frame
     updateFrame(animated: false)

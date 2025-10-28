@@ -3,7 +3,7 @@ protocol BottomMenuInteractorProtocol: AnyObject {
   func addPlace()
   func downloadMaps()
   func startDownloadingMapForCountry(_ countryId: String)
-  func donate()
+  func donate(_ url: String) -> Bool
   func openSettings()
   func shareLocation(cell: BottomMenuItemCell)
   func toggleTrackRecording()
@@ -48,13 +48,10 @@ extension BottomMenuInteractor: BottomMenuInteractorProtocol {
     delegate?.addPlace()
   }
 
-  func donate() {
+  func donate(_ url: String) -> Bool {
     close()
-    guard var url = Settings.donateUrl() else { return }
-    if url == "https://organicmaps.app/donate/" {
-      url = L("translated_om_site_url") + "donate/"
-    }
-    viewController?.openUrl(url, externally: true)
+    guard let viewController else { return false }
+    return viewController.openUrl(url, externally: true)
   }
 
   func downloadMaps() {

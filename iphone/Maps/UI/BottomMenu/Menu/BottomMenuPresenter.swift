@@ -121,14 +121,28 @@ extension BottomMenuPresenter {
                        title: L("download_maps"),
                        badgeCount: MapsAppDelegate.theApp().badgeNumber())
       case .donate:
-        cell.configure(image: Settings.isNY() ? UIImage(resource: .icChristmasTree) : UIImage(resource: .icMenuDonate),
-                       title: L("donate"))
+        let image: UIImage
+        let title: String
+        if Settings.isCrowdfundingEnabled() {
+          if Settings.canShowCrowdfundingPromo() {
+            image = UIImage(resource: .icCrowdfunding)
+            title = L("contribute_to_crowdfund")
+          } else {
+            image = UIImage(resource: .icChristmasTree)
+            title = L("contribute_to_crowdfund")
+          }
+        } else if Settings.isNY() {
+          image = UIImage(resource: .icChristmasTree)
+          title = L("donate")
+        } else {
+          image = UIImage(resource: .icMenuDonate)
+          title = L("donate")
+        }
+        cell.configure(image: image, title: title)
       case .settings:
-        cell.configure(image: UIImage(resource: .icMenuSettings),
-                       title: L("settings"))
+        cell.configure(image: UIImage(resource: .icMenuSettings), title: L("settings"))
       case .share:
-        cell.configure(image: UIImage(resource: .icMenuShare),
-                       title: L("share_my_location"))
+        cell.configure(image: UIImage(resource: .icMenuShare), title: L("share_my_location"))
       }
       return cell
     }
@@ -174,7 +188,10 @@ extension BottomMenuPresenter {
       case .downloadMaps:
         interactor.downloadMaps()
       case .donate:
-        interactor.donate()
+        guard let url = Settings.donateUrl() else { return }
+        if interactor.donate(url) && Settings.canShowCrowdfundingPromo() {
+          Settings.didShowCrowdfundingPromo()
+        }
       case .settings:
         interactor.openSettings()
       case .share:
