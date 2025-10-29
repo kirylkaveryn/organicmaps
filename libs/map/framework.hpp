@@ -803,6 +803,13 @@ public:
   bool CanShowRateUsRequest() const;
   void DidShowRateUsRequest() const;
 
+  bool IsCrowdfundingEnabled() const;
+  bool CanShowCrowdfundingPromo() const;
+  void DidShowCrowdfundingPromo() const;
+  void DidPossiblyReturnFromCrowdfundingPage() const;
+  // Only for testing purposes.
+  void ResetCrowdfunding();
+
 private:
   static uint32_t GetTimeoutForReason(ProductsPopupCloseReason reason);
   static std::string_view ToString(ProductsPopupCloseReason reason);

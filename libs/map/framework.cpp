@@ -118,6 +118,10 @@ std::string_view constexpr kProductsPopupCloseReasonSelectProductStr = "select_p
 std::string_view constexpr kFirstAskedForRateUsTimeKey = "FirstAskedForRateUsTime";
 std::string_view constexpr kLastAskedForRateUsTimeKey = "LastAskedForRateUsTime";
 
+std::string_view constexpr kProbablyDonatedFromCrowdfundingTimeKey = "ProbablyDonatedFromCrowdfundingTime";
+std::string_view constexpr kLastCrowdfundingPromoShownTimeKey = "LastCrowdfundingPromoShownTime";
+std::string_view constexpr kCrowdfundingClickedKey = "CrowdfundingClicked";
+
 auto constexpr kLargeFontsScaleFactor = 1.6;
 size_t constexpr kMaxTrafficCacheSizeBytes = 64 /* Mb */ * 1024 * 1024;
 
@@ -3494,4 +3498,98 @@ void Framework::DidShowRateUsRequest() const
     settings::Set(kFirstAskedForRateUsTimeKey, now);
 
   settings::Set(kLastAskedForRateUsTimeKey, now);
+}
+
+bool Framework::IsCrowdfundingEnabled() const
+{
+  std::string url;
+  if (!settings::Get(settings::kDonateUrl, url))
+    return false;
+
+  /// @todo(KK): uncomment for prod
+//  bool isNY = false;
+//  if (!settings::Get(settings::kNY, isNY) || !isNY)
+//    return false;
+
+  // Set to false to disable crowdfunding.
+  return true;
+}
+
+bool Framework::CanShowCrowdfundingPromo() const
+{
+  if (!IsCrowdfundingEnabled())
+    return false;
+
+  if (Platform::ConnectionStatus() == Platform::EConnectionType::CONNECTION_NONE)
+    return false;
+
+  uint8_t constexpr kMinBatteryLevelPercent = 15;
+  if (Platform::GetBatteryLevel() < kMinBatteryLevelPercent)
+    return false;
+
+  uint64_t crowdfundingClicked = 0;
+  if (settings::Get(kCrowdfundingClickedKey, crowdfundingClicked) && crowdfundingClicked >= 3)
+    return false;
+
+  uint64_t probablyDonatedTime = 0;
+  if (settings::Get(kProbablyDonatedFromCrowdfundingTimeKey, probablyDonatedTime) && probablyDonatedTime > 0)
+    return false;
+
+  uint64_t lastShownTime = 0;
+  if (settings::Get(kLastCrowdfundingPromoShownTimeKey, lastShownTime))
+  {
+    /// @todo(KK): uncomment for prod
+//#ifdef DEBUG
+    uint64_t constexpr kLastShownTimeout = 15;
+//#else
+//    uint64_t constexpr kLastShownTimeout = 24 * 60 * 60; // 1 day
+//#endif
+    if (base::SecondsSinceEpoch() < lastShownTime + kLastShownTimeout)
+      return false;
+  }
+  return true;
+}
+
+void Framework::DidShowCrowdfundingPromo() const
+{
+  uint64_t crowdfundingClicked = 0;
+  settings::Get(kCrowdfundingClickedKey, crowdfundingClicked);
+  settings::Set(kCrowdfundingClickedKey, crowdfundingClicked + 1);
+
+  uint64_t now = base::SecondsSinceEpoch();
+  settings::Set(kProbablyDonatedFromCrowdfundingTimeKey, now);
+  settings::Set(kLastCrowdfundingPromoShownTimeKey, now);
+}
+
+void Framework::DidPossiblyReturnFromCrowdfundingPage() const
+{
+  uint64_t crowdfundingClicked = 0;
+  if (!settings::Get(kCrowdfundingClickedKey, crowdfundingClicked) || crowdfundingClicked == 0)
+  {
+    LOG(LDEBUG, ("Crowdfunding page has not been opened."));
+    return;
+  }
+
+  uint64_t probablyDonatedFromCrowdfundingTime = 0;
+  if (settings::Get(kProbablyDonatedFromCrowdfundingTimeKey, probablyDonatedFromCrowdfundingTime))
+  {
+    /// @todo(KK): uncomment for prod
+//#ifdef DEBUG
+  uint32_t constexpr kProbablyDonatedTimeout = 5;
+//#else
+//  uint32_t constexpr kProbablyDonatedTimeout = 60;
+//#endif
+
+  // Reset if the user returns back from the Crowdfunding page too early.
+  bool const probablyDonated = kProbablyDonatedTimeout + probablyDonatedFromCrowdfundingTime < base::SecondsSinceEpoch();
+  if (!probablyDonated)
+    settings::Set(kProbablyDonatedFromCrowdfundingTimeKey, 0);
+  }
+}
+
+void Framework::ResetCrowdfunding() {
+  LOG(LDEBUG, ("Crowdfunding data was reset to initial state."));
+  settings::Set(kCrowdfundingClickedKey, 0);
+  settings::Set(kLastCrowdfundingPromoShownTimeKey, 0);
+  settings::Set(kProbablyDonatedFromCrowdfundingTimeKey, 0);
 }
