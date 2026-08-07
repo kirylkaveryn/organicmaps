@@ -1129,7 +1129,7 @@ NSString * const kCategorySelectorSegue = @"MapToCategorySelectorSegue";
   __weak __typeof(self) weakSelf = self;
   [self.trackRecordingManager addObserver:self
         recordingIsActiveDidChangeHandler:^(TrackRecordingState state, TrackInfo * _Nonnull trackInfo,
-                                            ElevationProfileData * _Nonnull (^_Nullable elevationData)()) {
+                                            ElevationProfileData * _Nullable (^_Nullable elevationData)()) {
           __strong __typeof(weakSelf) self = weakSelf;
           if (!self)
             return;
@@ -1143,7 +1143,7 @@ NSString * const kCategorySelectorSegue = @"MapToCategorySelectorSegue";
             if (UIApplication.sharedApplication.applicationState != UIApplicationStateActive)
               return;
             [self.controlsManager setTrackRecordingButtonState:TrackRecordingButtonStateHidden];
-            [placePageData updateWithTrackInfo:trackInfo elevationInfo:elevationData()];
+            [placePageData updateWithTrackInfo:trackInfo elevationInfo:elevationData ? elevationData() : nil];
             break;
           }
         }];
